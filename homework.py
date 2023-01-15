@@ -32,23 +32,23 @@ logger = logging.getLogger(__name__)
 
 
 def check_tokens():
-    """Проверка присутствия переменных окружения"""
-    if (PRACTICUM_TOKEN == None
-        or TELEGRAM_TOKEN == None
-        or TELEGRAM_CHAT_ID == None):
-            logger.critical('Нет переменных окружения')
-            return False
+    """Проверка присутствия переменных окружения."""
+    if (PRACTICUM_TOKEN is None
+       or TELEGRAM_TOKEN is None
+       or TELEGRAM_CHAT_ID is None):
+        logger.critical('Нет переменных окружения')
+        return False
     elif (PRACTICUM_TOKEN == ''
-        or TELEGRAM_TOKEN == ''
-        or TELEGRAM_CHAT_ID == ''):
-            logger.critical('Пустое значение переменных окружения')
-            return False
+          or TELEGRAM_TOKEN == ''
+          or TELEGRAM_CHAT_ID == ''):
+        logger.critical('Пустое значение переменных окружения')
+        return False
     else:
         return True
 
 
 def send_message(bot, message):
-    """Отправка уведомления в Telegram-чат"""
+    """Отправка уведомления в Telegram-чат."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
     except telegram.error.TelegramError as error:
@@ -58,11 +58,10 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """Запрос к API Endpoint"""
+    """Запрос к API Endpoint."""
     try:
         response = requests.get(ENDPOINT, headers=HEADERS,
-                                         params={
-                                             'from_date': timestamp})
+                                params={'from_date': timestamp})
     except RequestException as error:
         raise Exception(error)
     if response.status_code != 200:
@@ -72,7 +71,7 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    """Проверка ответа API"""
+    """Проверка ответа API."""
     if not isinstance(response, dict):
         raise TypeError('Неверный тип данных response')
     elif 'homeworks' not in response:
@@ -84,7 +83,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Присвоение статуса"""
+    """Присвоение статуса."""
     homework_name = homework.get('homework_name')
     if homework_name is None:
         raise Exception('В ответе API ключ homework_name не найден')
@@ -99,17 +98,18 @@ def parse_status(homework):
 
 
 def main():
-    """Контроллер работы приложения"""
+    """Контроллер работы приложения."""
     if check_tokens() is False:
         raise Exception('Ошибка токенов')
-    else:                      
+    else:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
         timestamp = int(time.time())
         while True:
             try:
                 new_homework = get_api_answer(timestamp)
                 check_response(new_homework)
-                send_message(bot, parse_status(new_homework.get('homeworks')[0]))
+                send_message(bot,
+                             parse_status(new_homework.get('homeworks')[0]))
             except Exception as error:
                 message = f'Ошибка: {error}'
                 send_message(bot, message)
@@ -117,5 +117,5 @@ def main():
 
 
 if __name__ == '__main__':
-        check_tokens()
-        main()
+    check_tokens()
+    main()
