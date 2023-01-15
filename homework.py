@@ -30,20 +30,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 def check_tokens():
     """Проверка присутствия переменных окружения"""
-    if (PRACTICUM_TOKEN is None 
-        or TELEGRAM_TOKEN is None 
-        or TELEGRAM_CHAT_ID is None):
-        logger.critical('Нет переменных окружения')
-        return False
-    elif (PRACTICUM_TOKEN is '' 
-        or TELEGRAM_TOKEN is ''
-        or TELEGRAM_CHAT_ID is ''):
-        logger.critical('Пустое значение переменных окружения')
-        return False
+    if (PRACTICUM_TOKEN == None
+        or TELEGRAM_TOKEN == None
+        or TELEGRAM_CHAT_ID == None):
+            logger.critical('Нет переменных окружения')
+            return False
+    elif (PRACTICUM_TOKEN == ''
+        or TELEGRAM_TOKEN == ''
+        or TELEGRAM_CHAT_ID == ''):
+            logger.critical('Пустое значение переменных окружения')
+            return False
     else:
         return True
+
 
 def send_message(bot, message):
     """Отправка уведомления в Telegram-чат"""
@@ -53,6 +55,7 @@ def send_message(bot, message):
         logger.error(f'Не удалось отправить сообщение: {error}')
     else:
         logger.debug(f'Сообщение отправлено: {message}')
+
 
 def get_api_answer(timestamp):
     """Запрос к API Endpoint"""
@@ -67,6 +70,7 @@ def get_api_answer(timestamp):
         raise Exception(error)
     return response.json()
 
+
 def check_response(response):
     """Проверка ответа API"""
     if not isinstance(response, dict):
@@ -77,6 +81,7 @@ def check_response(response):
         raise TypeError('Неверный тип данных homeworks')
     elif len(response['homeworks']) < 1:
         raise Exception('Нет обновлений статуса')
+
 
 def parse_status(homework):
     """Присвоение статуса"""
@@ -91,6 +96,7 @@ def parse_status(homework):
         raise Exception('Недокументированный статус')
     else:
         return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+
 
 def main():
     """Контроллер работы приложения"""
@@ -108,6 +114,7 @@ def main():
                 message = f'Ошибка: {error}'
                 send_message(bot, message)
             time.sleep(RETRY_PERIOD)
+
 
 if __name__ == '__main__':
         check_tokens()
