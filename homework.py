@@ -99,7 +99,7 @@ def main():
     """Контроллер работы приложения."""
     print(check_tokens())
     if check_tokens() is False:
-        sys.exit()
+        sys.exit('Ошибка токенов')
     else:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
         timestamp = int(time.time())
