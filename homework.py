@@ -38,8 +38,8 @@ def check_tokens():
                  TELEGRAM_CHAT_ID: 'TELEGRAM_CHAT_ID'}
     error_list = []
     for i, j in key_value.items():
-        if i is None or j not in os.environ:
-            logger.critical(f'Нет переменной окружения {i}')
+        if i is None:
+            logger.critical(f'Нет переменной окружения {j}')
             error_list.append(i)
             pass
     if len(error_list) == 0:
@@ -106,6 +106,7 @@ def main():
             new_homework = get_api_answer(timestamp)
             if len(new_homework['homeworks']) < 1:
                 new_homework = get_api_answer(0)
+                logger.debug('Нет новых статусов')
             check_response(new_homework)
             send_message(bot,
                          parse_status(new_homework.get('homeworks')[0]))
