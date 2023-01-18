@@ -97,9 +97,8 @@ def parse_status(homework):
 
 def main():
     """Контроллер работы приложения."""
-    print(check_tokens())
     if check_tokens() is False:
-        sys.exit('Ошибка токенов')
+        sys.exit()
     else:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
         timestamp = int(time.time())
