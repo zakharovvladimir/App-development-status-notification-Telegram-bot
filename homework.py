@@ -112,9 +112,9 @@ def main():
             timestamp = response.get('current_date')
             if str(timestamp) != str(previous_date):
                 send_message(bot,
-                         parse_status(response.get('homeworks')[0]))
+                             parse_status(response.get('homeworks')[0]))
                 previous_date = timestamp
-                logger.info('Статус изменился')     
+                logger.info('Статус изменился')
             previous_error = ''
         except Exception as error:
             message = f'Ошибка: {error}'
@@ -129,7 +129,7 @@ def main():
 if __name__ == '__main__':
     logging.basicConfig(
         filename='homework.log',
-        format='%(asctime)s - %(levelname)s - %(message)s', 
+        format='%(asctime)s - %(levelname)s - %(message)s',
         level=logging.DEBUG
     )
     console = logging.StreamHandler()
