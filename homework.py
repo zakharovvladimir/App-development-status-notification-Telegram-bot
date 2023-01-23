@@ -28,24 +28,25 @@ HOMEWORK_VERDICTS = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
+
 logger = logging.getLogger(__name__)
+previous_error = ''
 
 
 def check_tokens():
     """Проверка присутствия переменных окружения."""
-    key_value = {PRACTICUM_TOKEN: 'PRACTICUM_TOKEN',
-                 TELEGRAM_TOKEN: 'TELEGRAM_TOKEN',
-                 TELEGRAM_CHAT_ID: 'TELEGRAM_CHAT_ID'}
+    env_variables = {PRACTICUM_TOKEN: 'PRACTICUM_TOKEN',
+                     TELEGRAM_TOKEN: 'TELEGRAM_TOKEN',
+                     TELEGRAM_CHAT_ID: 'TELEGRAM_CHAT_ID'}
     error_list = []
-    for i, j in key_value.items():
-        if i is None:
-            logger.critical(f'Нет переменной окружения {j}')
-            error_list.append(i)
+    for env_var, env_str in env_variables.items():
+        if env_var is None:
+            logger.critical(f'Нет переменной окружения {env_str}')
+            error_list.append(env_var)
             pass
-    if len(error_list) == 0:
-        return True
-    else:
+    if not error_list == []:
         return False
+    return True
 
 
 def send_message(bot, message):
@@ -87,9 +88,7 @@ def parse_status(homework):
     if not homework_name:
         raise ParseException('В ответе API ключ homework_name не найден')
     status = homework.get('status')
-    if not HOMEWORK_VERDICTS.keys():
-        raise ParseException('Ключи статусов не найдены')
-    if status not in HOMEWORK_VERDICTS.keys():
+    if status not in HOMEWORK_VERDICTS:
         raise ParseException('Неизвестный статус')
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -97,28 +96,46 @@ def parse_status(homework):
 
 def main():
     """Контроллер работы приложения."""
-    if check_tokens() is False:
+    if not check_tokens():
         sys.exit()
-    else:
-        bot = telegram.Bot(token=TELEGRAM_TOKEN)
-        timestamp = int(time.time())
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    timestamp = int(time.time())
+    previous_error = ''
+    previous_date = ''
+    while True:
         try:
-            new_homework = get_api_answer(timestamp)
-            if len(new_homework['homeworks']) < 1:
-                new_homework = get_api_answer(0)
-                logger.debug('Нет новых статусов')
-            check_response(new_homework)
-            send_message(bot,
-                         parse_status(new_homework.get('homeworks')[0]))
+            response = get_api_answer(timestamp)
+            check_response(response)
+            if not response['homeworks']:
+                logger.debug('Нет работ на рассмотрении')
+                time.sleep(RETRY_PERIOD)
+            timestamp = response.get('current_date')
+            if str(timestamp) != str(previous_date):
+                send_message(bot,
+                         parse_status(response.get('homeworks')[0]))
+                previous_date = timestamp
+                logger.info('Статус изменился')     
+            previous_error = ''
         except Exception as error:
             message = f'Ошибка: {error}'
-            send_message(bot, message)
-        time.sleep(RETRY_PERIOD)
+            if str(error) != str(previous_error):
+                send_message(bot, message)
+                previous_error = error
+            logger.error(message)
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
     logging.basicConfig(
-        format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG
+        filename='homework.log',
+        format='%(asctime)s - %(levelname)s - %(message)s', 
+        level=logging.DEBUG
     )
-    check_tokens()
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    logging.getLogger('').addHandler(console)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
     main()
