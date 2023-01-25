@@ -30,7 +30,6 @@ HOMEWORK_VERDICTS = {
 
 
 logger = logging.getLogger(__name__)
-previous_error = ''
 
 
 def check_tokens():
@@ -43,8 +42,7 @@ def check_tokens():
         if env_var is None:
             logger.critical(f'Нет переменной окружения {env_str}')
             error_list.append(env_var)
-            pass
-    if not error_list == []:
+    if error_list:
         return False
     return True
 
@@ -86,8 +84,10 @@ def parse_status(homework):
     """Присвоение статуса."""
     homework_name = homework.get('homework_name')
     if not homework_name:
-        raise ParseException('В ответе API ключ homework_name не найден')
+        raise ParseException('В ответе API ключ homework_name или его значение не найдено')
     status = homework.get('status')
+    if not status:
+        raise ParseException('В ответе API ключ status или его значение не найдено')
     if status not in HOMEWORK_VERDICTS:
         raise ParseException('Неизвестный статус')
     verdict = HOMEWORK_VERDICTS[status]
@@ -100,7 +100,7 @@ def main():
         sys.exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
-    previous_error = ''
+    previous_message = ''
     previous_date = ''
     while True:
         try:
@@ -109,18 +109,19 @@ def main():
             if not response['homeworks']:
                 logger.debug('Нет работ на рассмотрении')
                 time.sleep(RETRY_PERIOD)
-            timestamp = response.get('current_date')
+                main()
             if str(timestamp) != str(previous_date):
                 send_message(bot,
                              parse_status(response.get('homeworks')[0]))
+                timestamp = response.get('current_date')
                 previous_date = timestamp
                 logger.info('Статус изменился')
-            previous_error = ''
+            previous_message = ''
         except Exception as error:
             message = f'Ошибка: {error}'
-            if str(error) != str(previous_error):
+            if str(error) != str(previous_message):
                 send_message(bot, message)
-                previous_error = error
+                previous_message = error
             logger.error(message)
         finally:
             time.sleep(RETRY_PERIOD)
