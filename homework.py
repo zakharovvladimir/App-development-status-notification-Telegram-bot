@@ -84,10 +84,14 @@ def parse_status(homework):
     """Присвоение статуса."""
     homework_name = homework.get('homework_name')
     if not homework_name:
-        raise ParseException('В ответе API ключ homework_name или его значение не найдено')
+        raise ParseException(
+            'В ответе API ключ homework_name или его значение не найдено'
+        )
     status = homework.get('status')
     if not status:
-        raise ParseException('В ответе API ключ status или его значение не найдено')
+        raise ParseException(
+            'В ответе API ключ status или его значение не найдено'
+        )
     if status not in HOMEWORK_VERDICTS:
         raise ParseException('Неизвестный статус')
     verdict = HOMEWORK_VERDICTS[status]
@@ -101,7 +105,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     previous_message = ''
-    previous_date = ''
+    previous_status = ''
     while True:
         try:
             response = get_api_answer(timestamp)
@@ -110,11 +114,13 @@ def main():
                 logger.debug('Нет работ на рассмотрении')
                 time.sleep(RETRY_PERIOD)
                 main()
-            if str(timestamp) != str(previous_date):
+            if str(parse_status(
+                   response.get('homeworks')[0])) != str(previous_status):
                 send_message(bot,
                              parse_status(response.get('homeworks')[0]))
                 timestamp = response.get('current_date')
-                previous_date = timestamp
+                previous_status = str(parse_status(
+                                      response.get('homeworks')[0]))
                 logger.info('Статус изменился')
             previous_message = ''
         except Exception as error:
