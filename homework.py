@@ -53,8 +53,10 @@ def send_message(bot, message):
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
     except telegram.error.TelegramError as error:
         logger.error(f'Не удалось отправить сообщение: {error}')
+        return False
     else:
         logger.debug(f'Сообщение отправлено: {message}')
+        return True
 
 
 def get_api_answer(timestamp):
@@ -83,14 +85,14 @@ def check_response(response):
 def parse_status(homework):
     """Присвоение статуса."""
     homework_name = homework.get('homework_name')
-    if not homework_name:
+    if 'homework_name' not in homework:
         raise ParseException(
-            'В ответе API ключ homework_name или его значение не найдено'
+            'В ответе API ключ homework_name не найден'
         )
     status = homework.get('status')
-    if not status:
+    if 'status' not in homework:
         raise ParseException(
-            'В ответе API ключ status или его значение не найдено'
+            'В ответе API ключ status не найден'
         )
     if status not in HOMEWORK_VERDICTS:
         raise ParseException('Неизвестный статус')
@@ -104,7 +106,6 @@ def main():
         sys.exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
-    previous_message = ''
     previous_status = ''
     while True:
         try:
@@ -112,13 +113,12 @@ def main():
             check_response(response)
             if not response['homeworks']:
                 logger.debug('Нет работ на рассмотрении')
-                time.sleep(RETRY_PERIOD)
-                main()
             if str(parse_status(
                    response.get('homeworks')[0])) != str(previous_status):
                 send_message(bot,
                              parse_status(response.get('homeworks')[0]))
-                timestamp = response.get('current_date')
+                if send_message is True:
+                    timestamp = response.get('current_date')
                 previous_status = str(parse_status(
                                       response.get('homeworks')[0]))
                 logger.info('Статус изменился')
@@ -127,7 +127,8 @@ def main():
             message = f'Ошибка: {error}'
             if str(error) != str(previous_message):
                 send_message(bot, message)
-                previous_message = error
+                if send_message is True:
+                    previous_message = error
             logger.error(message)
         finally:
             time.sleep(RETRY_PERIOD)
