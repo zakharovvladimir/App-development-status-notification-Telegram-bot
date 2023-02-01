@@ -113,21 +113,19 @@ def main():
             check_response(response)
             if not response['homeworks']:
                 logger.debug('Нет работ на рассмотрении')
-            if str(parse_status(
-                   response.get('homeworks')[0])) != str(previous_status):
-                send_message(bot,
-                             parse_status(response.get('homeworks')[0]))
-                if send_message is True:
+            message = parse_status(response.get('homeworks')[0])
+            if message != previous_status:
+                send_message(bot, message)
+                if send_message(bot, message) is True:
                     timestamp = response.get('current_date')
-                previous_status = str(parse_status(
-                                      response.get('homeworks')[0]))
+                    previous_status = str(parse_status(
+                                          response.get('homeworks')[0]))
                 logger.info('Статус изменился')
-            previous_message = ''
         except Exception as error:
             message = f'Ошибка: {error}'
-            if str(error) != str(previous_message):
+            if error != previous_message:
                 send_message(bot, message)
-                if send_message is True:
+                if send_message(bot, message) is True:
                     previous_message = error
             logger.error(message)
         finally:
