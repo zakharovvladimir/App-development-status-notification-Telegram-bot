@@ -121,6 +121,7 @@ def main():
                     previous_status = str(parse_status(
                                           response.get('homeworks')[0]))
                 logger.info('Статус изменился')
+            previous_message = ''
         except Exception as error:
             message = f'Ошибка: {error}'
             if error != previous_message:
