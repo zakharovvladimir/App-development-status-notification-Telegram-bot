@@ -28,7 +28,6 @@ HOMEWORK_VERDICTS = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -107,26 +106,20 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     previous_status = ''
+    previous_message = ''
     while True:
         try:
             response = get_api_answer(timestamp)
             check_response(response)
             if not response['homeworks']:
                 logger.debug('Нет работ на рассмотрении')
-                raise ParseException('Нет работ на рассмотрении')
+                continue
             message = parse_status(response.get('homeworks')[0])
             if message != previous_status:
                 if send_message(bot, message):
                     timestamp = response.get('current_date')
                     previous_status = message
                 logger.info('Статус изменился')
-            previous_message = ''
-            """
-            previous_message, flake8 без нее ругается.
-            F821 undefined name 'previous_message',
-            F841 local variable 'previous_message'
-            is assigned to but never used.
-            """
         except Exception as error:
             message = f'Ошибка: {error}'
             if error != previous_message:
