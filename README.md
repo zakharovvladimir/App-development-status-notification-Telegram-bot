@@ -1,2 +1,2 @@
-# homework_bot
-python telegram bot
+# Status notification Telegram bot
+App-development-status-notification-Telegram-bot
