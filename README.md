@@ -9,11 +9,9 @@ add to your .env:
 PRACTICUM_TOKEN = ''
 TELEGRAM_TOKEN = ''
 TELEGRAM_CHAT_ID = ''
+API_TOKEN = ''
+RETRY_PERIOD = ''
 ```
-
-RETRY_PERIOD = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
-HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 ### Author
 Vladimir Zakharov // vladimir.zakharov.s@yandex.ru
